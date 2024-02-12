@@ -14,15 +14,22 @@
 
 # Script para desarrollar el código principal de la app con Flet
 
-
-
+from dotenv import load_dotenv
 import flet as ft
 
-from models import UsuarioDB
+from db import UserDBHandler
+from flet_models import UserInfo
+from models import UserDB
 
 TITLE = 'TrueForm Manager'
 COLOR_FONDO_GENERAL = '#5b6060'
 VERDE_FOSFO = '#a5de37'
+COLLECTION_DB = 'usuarios'
+
+# Cargamos variables de entorno
+load_dotenv()
+
+db_handler = UserDBHandler(COLLECTION_DB)
 
 def main(page:ft.Page) -> None:
     page.fonts = {
@@ -36,7 +43,6 @@ def main(page:ft.Page) -> None:
     page.window_resizable = False
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.START
-
     page.appbar = ft.AppBar(
         leading=ft.Icon(ft.icons.TRANSLATE, color=ft.colors.AMBER_50),
         #leading_width=180,
@@ -49,6 +55,26 @@ def main(page:ft.Page) -> None:
         center_title=True,        
     )
 
+    def poblar_listview_usuarios(listview:ft.ListView, handler:UserDBHandler) -> ft.ListView:
+        """Puebla una listview con elementos de una base de datos
+        y la devuelve
+
+        Parameters
+        ----------
+        listview : ft.ListView
+            _description_
+        handler : UserDBHandler
+            _description_
+
+        Returns
+        -------
+        ft.ListView
+            _description_
+        """
+        for user in handler:
+            listview.controls.append(UserInfo(user))    
+        return listview
+
     panel_control = ft.Container(
         ft.Column([
             ft.Container(
@@ -57,11 +83,11 @@ def main(page:ft.Page) -> None:
                     ft.Text('Panel de Control', weight=ft.FontWeight.BOLD, color=ft.colors.WHITE60)
                 ],
             alignment=ft.MainAxisAlignment.CENTER),
-            ),
+            ), # Este textfield habrá que instanciarlo
             *[ft.TextField(label=campo, height=26, text_size=15, content_padding=ft.padding.only(left=10),
                             cursor_color=VERDE_FOSFO,
-                            filled=False, color=ft.colors.WHITE60, border_color=VERDE_FOSFO, selection_color=VERDE_FOSFO,
-                            focused_border_color=VERDE_FOSFO, label_style=ft.TextStyle(color=VERDE_FOSFO, size=12)) for campo in UsuarioDB.model_fields]
+                            filled=False, color=ft.colors.WHITE, border_color=VERDE_FOSFO, selection_color=VERDE_FOSFO,
+                            focused_border_color=VERDE_FOSFO, label_style=ft.TextStyle(color=VERDE_FOSFO, size=12)) for campo in UserDB.model_fields]
         ]),
         #bgcolor=ft.colors.AMBER_50,
         border_radius=8,
@@ -70,6 +96,11 @@ def main(page:ft.Page) -> None:
         height=650,
         padding=5,
         alignment=ft.alignment.center,
+    )
+    listview_usuarios = ft.ListView(
+        height=panel_control.height,
+        width=panel_control.width,
+        spacing=5
     )
 
     usuarios = ft.Container(
@@ -80,7 +111,10 @@ def main(page:ft.Page) -> None:
                     ft.Text('Usuarios', weight=ft.FontWeight.BOLD, color=ft.colors.WHITE60)
                 ],
             alignment=ft.MainAxisAlignment.CENTER),
-            )            
+            ),
+            ft.Container(
+                poblar_listview_usuarios(listview_usuarios, db_handler),
+            )
             
         ]),
         #bgcolor=ft.colors.AMBER_50,
@@ -90,7 +124,6 @@ def main(page:ft.Page) -> None:
         height=panel_control.height,
         padding=5,
         alignment=panel_control.alignment
-
     )
 
     container_principal = ft.Container(

@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field
 
 from utils import get_datetime_formatted
 
-class UsuarioDB(BaseModel):
+class UserDB(BaseModel):
     nombre:str
     email:str
     telefono:str
