@@ -18,9 +18,9 @@ from typing import Any
 
 from pymongo import MongoClient
 
-from models import UserDB
+from db.models import UserDB
+from db.settings import DEFAULT_DB
 
-DEFAULT_DB = 'TrueFormTranslator'
 
 class DBHandler(Sequence):
     def __init__(self, collection:str, database:str=DEFAULT_DB) -> None:

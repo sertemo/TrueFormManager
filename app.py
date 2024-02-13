@@ -17,19 +17,19 @@
 from dotenv import load_dotenv
 import flet as ft
 
-from db import UserDBHandler
-from flet_models import UserInfo
-from models import UserDB
+from db.handler import UserDBHandler
+from components.user_info import UserInfo
+from components.user_textfields import user_textfield_list
+from db.models import UserDB
+from db.settings import COLLECTION_USUARIOS
+import styles
 
 TITLE = 'TrueForm Manager'
-COLOR_FONDO_GENERAL = '#5b6060'
-VERDE_FOSFO = '#a5de37'
-COLLECTION_DB = 'usuarios'
 
 # Cargamos variables de entorno
 load_dotenv()
 
-db_handler = UserDBHandler(COLLECTION_DB)
+db_handler = UserDBHandler(COLLECTION_USUARIOS)
 
 def main(page:ft.Page) -> None:
     page.fonts = {
@@ -37,7 +37,7 @@ def main(page:ft.Page) -> None:
     }
     page.title = TITLE
     page.theme = ft.Theme(font_family="RobotoSlab")
-    page.bgcolor = COLOR_FONDO_GENERAL
+    page.bgcolor = styles.COLOR_FONDO_GENERAL
     page.window_width = 1000
     page.window_height = 800
     page.window_resizable = False
@@ -48,9 +48,9 @@ def main(page:ft.Page) -> None:
         #leading_width=180,
         title=ft.Row([
             ft.Text(TITLE.split()[0], weight=ft.FontWeight.BOLD, color=ft.colors.WHITE30),
-            ft.Text(TITLE.split()[1], weight=ft.FontWeight.BOLD, color=VERDE_FOSFO)
+            ft.Text(TITLE.split()[1], weight=ft.FontWeight.BOLD, color=styles.ACENTOS)
         ]),
-        bgcolor=COLOR_FONDO_GENERAL,
+        bgcolor=styles.COLOR_FONDO_GENERAL,
         toolbar_height=60,
         center_title=True,        
     )
@@ -72,8 +72,27 @@ def main(page:ft.Page) -> None:
             _description_
         """
         for user in handler:
-            listview.controls.append(UserInfo(user))    
+            listview.controls.append(UserInfo(user, load_user_info))    
         return listview
+
+    def load_user_info(e:ft.ControlEvent) -> None:
+        """Carga la información de un usuario en los textfields"""    
+        # Sacamos la clave (campo único de quien se haya hecho click)
+        clave_user = e.control.key
+        # Sacamos todos los campos de ese usuario
+        user_dict = db_handler.find_one('clave', clave_user)
+        # Lo pasamos por UserDb para que saque los campos en el mismo orden
+        userdb = UserDB(**user_dict)
+        user_dict_ordered = userdb.model_dump()
+        # Iteramos para rellenar los campos
+        for campo, user_info in zip(user_textfield_list, user_dict_ordered.values()):
+            campo.value = user_info
+            campo.update()
+
+    def limpiar_campos(e:ft.ControlEvent) -> None:
+        for campo in user_textfield_list:
+            campo.value = ""
+            campo.update()
 
     panel_control = ft.Container(
         ft.Column([
@@ -83,11 +102,31 @@ def main(page:ft.Page) -> None:
                     ft.Text('Panel de Control', weight=ft.FontWeight.BOLD, color=ft.colors.WHITE60)
                 ],
             alignment=ft.MainAxisAlignment.CENTER),
-            ), # Este textfield habrá que instanciarlo
-            *[ft.TextField(label=campo, height=26, text_size=15, content_padding=ft.padding.only(left=10),
-                            cursor_color=VERDE_FOSFO,
-                            filled=False, color=ft.colors.WHITE, border_color=VERDE_FOSFO, selection_color=VERDE_FOSFO,
-                            focused_border_color=VERDE_FOSFO, label_style=ft.TextStyle(color=VERDE_FOSFO, size=12)) for campo in UserDB.model_fields]
+            ),
+            ft.Row([
+                ft.IconButton(ft.icons.DELETE, bgcolor=ft.colors.WHITE12, icon_size=18, 
+                                icon_color=ft.colors.WHITE,
+                                tooltip='Limpiar campos', 
+                                on_click=limpiar_campos
+                ),
+                ft.IconButton(ft.icons.PERSON_ADD_ALT, bgcolor=ft.colors.WHITE12, icon_size=18, 
+                                icon_color=ft.colors.WHITE,
+                                tooltip='Añadir usuario', 
+                                on_click='',
+                ),
+                ft.IconButton(ft.icons.PERSON_REMOVE_ROUNDED, bgcolor=ft.colors.WHITE12, icon_size=18, 
+                                icon_color=ft.colors.WHITE,
+                                tooltip='Eliminar usuario', 
+                                on_click='',
+                ),
+                ft.IconButton(ft.icons.UPDATE, bgcolor=ft.colors.WHITE12, icon_size=18, 
+                                icon_color=ft.colors.WHITE,
+                                tooltip='Modificar campos', 
+                                on_click='',
+                ),
+            ]),
+            *user_textfield_list
+
         ]),
         #bgcolor=ft.colors.AMBER_50,
         border_radius=8,

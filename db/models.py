@@ -31,6 +31,6 @@ class UserDB(BaseModel):
     ultimo_palabras:int = 0 # palabras del ultimo documento traducido
     palabras_limite:int # num max de palabras contratadas
     palabras_acumulado:int = 0 # palabras traducidas hasta la fecha
-    facturado_accumulado:float # importe facturado hasta la fecha a este usuario
+    facturado_acumulado:float # importe facturado hasta la fecha a este usuario
     coste_acumulado:float = 0 # coste acumulado hasta la fecha por este usuario
     ultimo_text_traducido:str = '' # checkpoint que se van guardando del texto traducido por seguridad
