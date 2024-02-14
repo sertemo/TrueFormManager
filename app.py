@@ -20,11 +20,15 @@ import flet as ft
 from db.handler import UserDBHandler
 from components.user_info import UserInfo
 from components.user_textfields import user_textfield_list
+from components.user_option_button import ButtonUserOptions
 from db.models import UserDB
 from db.settings import COLLECTION_USUARIOS
 import styles
 
 TITLE = 'TrueForm Manager'
+CAMPOS_BLOQUEADOS = ['fecha_alta', 'ultimo_uso', 'ultimo_coste',
+                        'ultimo_palabras', 'palabras_acumulado', 'facturado_acumulado',
+                        'coste_acumulado', 'ultimo_text_traducido']
 
 # Cargamos variables de entorno
 load_dotenv()
@@ -39,9 +43,9 @@ def main(page:ft.Page) -> None:
     page.theme = ft.Theme(font_family="RobotoSlab")
     page.bgcolor = styles.COLOR_FONDO_GENERAL
     page.window_width = 1000
-    page.window_height = 800
+    page.window_height = 850
     page.window_resizable = False
-    page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+    page.horizontal_alignment = ft.CrossAxisAlignment.START
     page.vertical_alignment = ft.MainAxisAlignment.START
     page.appbar = ft.AppBar(
         leading=ft.Icon(ft.icons.TRANSLATE, color=ft.colors.AMBER_50),
@@ -87,12 +91,28 @@ def main(page:ft.Page) -> None:
         # Iteramos para rellenar los campos
         for campo, user_info in zip(user_textfield_list, user_dict_ordered.values()):
             campo.value = user_info
+            if campo.label in CAMPOS_BLOQUEADOS:
+                campo.disabled = True
             campo.update()
 
     def limpiar_campos(e:ft.ControlEvent) -> None:
         for campo in user_textfield_list:
             campo.value = ""
+            campo.disabled = False
             campo.update()
+
+    #TODO
+    def añadir_usuario():
+        # TODO Comprobar si existe el email en db
+        # TODO Comprobar si exsite la clave en db
+        # TODO Comprobar campos vacíos
+        # TODO Pasarle a Userdb solo los campos requeridos
+        pass
+
+
+
+    def eliminar_usuario():
+        pass
 
     panel_control = ft.Container(
         ft.Column([
@@ -104,26 +124,10 @@ def main(page:ft.Page) -> None:
             alignment=ft.MainAxisAlignment.CENTER),
             ),
             ft.Row([
-                ft.IconButton(ft.icons.DELETE, bgcolor=ft.colors.WHITE12, icon_size=18, 
-                                icon_color=ft.colors.WHITE,
-                                tooltip='Limpiar campos', 
-                                on_click=limpiar_campos
-                ),
-                ft.IconButton(ft.icons.PERSON_ADD_ALT, bgcolor=ft.colors.WHITE12, icon_size=18, 
-                                icon_color=ft.colors.WHITE,
-                                tooltip='Añadir usuario', 
-                                on_click='',
-                ),
-                ft.IconButton(ft.icons.PERSON_REMOVE_ROUNDED, bgcolor=ft.colors.WHITE12, icon_size=18, 
-                                icon_color=ft.colors.WHITE,
-                                tooltip='Eliminar usuario', 
-                                on_click='',
-                ),
-                ft.IconButton(ft.icons.UPDATE, bgcolor=ft.colors.WHITE12, icon_size=18, 
-                                icon_color=ft.colors.WHITE,
-                                tooltip='Modificar campos', 
-                                on_click='',
-                ),
+                ButtonUserOptions(ft.icons.DELETE, 'Resetear campos', limpiar_campos),
+                ButtonUserOptions(ft.icons.PERSON_ADD_ALT, 'Añadir usuario', None),
+                ButtonUserOptions(ft.icons.PERSON_REMOVE_ROUNDED, 'Eliminar usuario', None),
+                ButtonUserOptions(ft.icons.UPDATE, 'Modificar campos', None),
             ]),
             *user_textfield_list
 
@@ -132,9 +136,9 @@ def main(page:ft.Page) -> None:
         border_radius=8,
         border=ft.border.all(2, color=ft.colors.WHITE38),
         width=300,
-        height=650,
+        height=700,
         padding=5,
-        alignment=ft.alignment.center,
+        alignment=ft.alignment.center_right,
     )
     listview_usuarios = ft.ListView(
         height=panel_control.height,
@@ -160,7 +164,7 @@ def main(page:ft.Page) -> None:
         border_radius=panel_control.border_radius,
         border=panel_control.border,
         width=panel_control.width,
-        height=panel_control.height,
+        height=panel_control.height // 2,
         padding=5,
         alignment=panel_control.alignment
     )
@@ -169,7 +173,8 @@ def main(page:ft.Page) -> None:
         ft.Row([
             panel_control,
             usuarios
-    ])
+    ],
+    ),
     )
 
     page.add(

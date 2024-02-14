@@ -11,47 +11,42 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from typing import Callable
 
 import flet as ft
 
-from db.models import UserDB
 import styles
 
-class UserInfo(ft.UserControl):
-    def __init__(self, user:UserDB, click_func:Callable) -> None:
+class ButtonUserOptions(ft.UserControl):
+    def __init__(self, icono:str, tooltip:'str', click_func:Callable) -> None:
         super().__init__()
-        self.user = user
+        self.icono = icono
+        self.tooltip = tooltip
         self.click_func = click_func
-        self.key = user.clave
-
+        self.height = 35
+        self.width = 35
+        self.color_fondo = ft.colors.WHITE12
+        self.color_icono = ft.colors.WHITE
+    
     def on_hover(self, e:ft.ControlEvent) -> None:
         """ Cambia el fondo a verde cuando se hace hover
         sobre un contenedro"""     
         if e.data == "true":
             e.control.bgcolor = styles.ACENTOS
-            e.control.content.controls[0].color = styles.COLOR_LETRAS_OSCURO
+            e.control.content.color = styles.COLOR_LETRAS_OSCURO
         else:
             e.control.bgcolor = ft.colors.WHITE12
-            e.control.content.controls[0].color = ft.colors.WHITE60
+            e.control.content.color = ft.colors.WHITE60
         e.control.update()
 
     def build(self) -> ft.Container:
-        return ft.Container(
-            ft.Row([
-                ft.Text(self.user.nombre, size=15, color=ft.colors.WHITE60),
-                ft.Row([
-                    ft.Text(f'{self.user.palabras_acumulado:,}', size=10, color=ft.colors.GREY_500),
-                    ft.Text('/', size=10, color=ft.colors.GREY_500),
-                    ft.Text(f'{self.user.palabras_limite:,}', size=10, color=ft.colors.GREY_500)
-                ],
-                spacing=1)                
-            ]),
-            key=self.key,
-            bgcolor=ft.colors.WHITE12,
-            border_radius=styles.BORDER_RADIUS,
-            padding=5,
-            on_hover=self.on_hover,
-            on_click=self.click_func
-        )
-
+        return ft.Container(ft.Icon(self.icono, 
+                                color=self.color_icono), 
+                                bgcolor=self.color_fondo, 
+                                height=self.height,
+                                width=self.width,
+                                border_radius=8,
+                                tooltip=self.tooltip, 
+                                on_click=self.click_func,
+                                on_hover=self.on_hover)
